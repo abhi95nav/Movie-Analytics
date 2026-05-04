@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie Analytics — Industry & Talent Insights</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --accent: #e67e22;
+    --accent2: #3498db;
+    --accent3: #2ecc71;
+    --accent4: #9b59b6;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --red: #e74c3c;
+    --gold: #f1c40f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  .nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    color: var(--accent);
+    padding: 14px 0;
+    margin-right: 32px;
+    white-space: nowrap;
+  }
+
+  .nav-tab {
+    padding: 14px 18px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* PAGES */
+  .page { display: none; padding: 24px; }
+  .page.active { display: block; }
+
+  /* PAGE HEADER */
+  .page-header {
+    background: linear-gradient(135deg, var(--surface2) 0%, #1a2234 100%);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .page-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .page-header p { color: var(--muted); font-size: 13px; }
+
+  /* KPI CARDS */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent-color, var(--accent));
+  }
+
+  .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .kpi-value { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--text); }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  @media (max-width: 900px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* CHART CARDS */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+
+  .chart-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .chart-desc {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    line-height: 1.4;
+  }
+
+  .chart-wrap { position: relative; }
+
+  /* HORIZONTAL BAR - custom */
+  .hbar-list { list-style: none; }
+  .hbar-item { margin-bottom: 8px; }
+  .hbar-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+    font-size: 12px;
+  }
+  .hbar-label { color: var(--text); }
+  .hbar-val { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hbar-track {
+    background: var(--surface2);
+    border-radius: 2px;
+    height: 7px;
+    overflow: hidden;
+  }
+  .hbar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--fill-color, var(--accent));
+    transition: width 0.6s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* DIRECTOR TABLE */
+  .dir-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .dir-table th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .dir-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid #1e2530;
+    color: var(--text);
+  }
+  .dir-table tr:last-child td { border-bottom: none; }
+  .dir-table tr:hover td { background: var(--surface2); }
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--surface2);
+    color: var(--muted);
+  }
+  .rank-badge.gold { background: #2d2510; color: var(--gold); }
+  .rank-badge.silver { background: #1e2530; color: #adb5bd; }
+  .rank-badge.bronze { background: #1f1a14; color: #cd7f32; }
+
+  /* GEMS TABLE */
+  .gems-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .gems-table th {
+    text-align: left; color: var(--muted); font-weight: 500;
+    padding: 6px 8px; border-bottom: 1px solid var(--border);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .gems-table td { padding: 7px 8px; border-bottom: 1px solid #1e2530; }
+  .gems-table tr:last-child td { border-bottom: none; }
+  .gems-table tr:hover td { background: var(--surface2); }
+  .rating-star { color: var(--gold); font-size: 11px; }
+  .genre-tag {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin: 1px;
+  }
+  .gem-title { color: var(--text); font-weight: 500; }
+  .gem-dir { color: var(--muted); font-size: 11px; }
+
+  /* SEARCH */
+  .search-box {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-size: 13px;
+    margin-bottom: 14px;
+    outline: none;
+    font-family: inherit;
+  }
+  .search-box:focus { border-color: var(--accent2); }
+
+  /* STACKED AREA - canvas */
+  canvas { display: block; }
+
+  /* SCROLLABLE */
+  .scroll-y { overflow-y: auto; max-height: 520px; }
+  .scroll-y::-webkit-scrollbar { width: 4px; }
+  .scroll-y::-webkit-scrollbar-track { background: transparent; }
+  .scroll-y::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .full-row { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">🎬 Movie Analytics</div>
+  <div class="nav-tab active" onclick="showPage('industry')">Industry Overview</div>
+  <div class="nav-tab" onclick="showPage('directors')">Director Analytics</div>
+  <div class="nav-tab" onclick="showPage('gems')">Hidden Gems</div>
+</nav>
+
+<!-- ============ PAGE: INDUSTRY OVERVIEW ============ -->
+<div id="page-industry" class="page active">
+
+  <div class="page-header">
+    <h2>🎬 Industry Overview</h2>
+    <p>Key metrics across 9,770 movies spanning 1927–2026. Charts mirror your Databricks Lakeview dashboard.</p>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card" style="--accent-color: var(--accent)">
+      <div class="kpi-label">Total Movies</div>
+      <div class="kpi-value">9,770</div>
+      <div class="kpi-sub">across all years</div>
+    </div>
+    <div class="kpi-card" style="--accent-color: var(--accent2)">
+      <div class="kpi-label">Languages</div>
+      <div class="kpi-value">10+</div>
+      <div class="kpi-sub">English = 68%</div>
+    </div>
+    <div class="kpi-card" style="--accent-color: var(--accent3)">
+      <div class="kpi-label">Top Director</div>
+      <div class="kpi-value" style="font-size:18px;">Cameron</div>
+      <div class="kpi-sub">$10.23B total revenue</div>
+    </div>
+    <div class="kpi-card" style="--accent-color: var(--gold)">
+      <div class="kpi-label">Top Genre</div>
+      <div class="kpi-value" style="font-size:18px;">Drama</div>
+      <div class="kpi-sub">4,331 titles</div>
+    </div>
+    <div class="kpi-card" style="--accent-color: var(--accent4)">
+      <div class="kpi-label">Hidden Gems</div>
+      <div class="kpi-value">114</div>
+      <div class="kpi-sub">high-rating, low-budget</div>
+    </div>
+  </div>
+
+  <!-- Row 1: Yearly Trend + Language Bar -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Industry Trends (1990–2025)</div>
+      <div class="chart-desc">Movie output grew steadily until 2020 COVID dip, then rebounded strongly</div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="yearlyTrendChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Movies by Language</div>
+      <div class="chart-desc">English dominates with 68% of all films — top 9 languages shown</div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="langChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Genre Count + Language Trend -->
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Movies by Genre</div>
+      <div class="chart-desc">Drama & Comedy lead — multi-genre films count toward each genre</div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="genreChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">English vs Non-English Growth (1990–2025)</div>
+      <div class="chart-desc">Non-English cinema has surged since 2000 — narrowing the gap</div>
+      <div class="chart-wrap" style="height:280px">
+        <canvas id="langTrendChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: Budget Tier -->
+  <div class="chart-card" style="margin-bottom:16px">
+    <div class="chart-title">Movies by Budget Tier</div>
+    <div class="chart-desc">Majority of films are micro-budget — blockbusters are rare but dominate revenue</div>
+    <div class="chart-wrap" style="height:160px">
+      <canvas id="budgetTierChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ PAGE: DIRECTOR ANALYTICS ============ -->
+<div id="page-directors" class="page">
+
+  <div class="page-header">
+    <h2>🎥 Director Analytics</h2>
+    <p>Top 20 directors ranked by total box-office revenue. Includes avg rating, profit, and signature film.</p>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="chart-card">
+      <div class="chart-title">Top Directors by Revenue ($B)</div>
+      <div class="chart-desc">Lifetime box-office revenue across all films</div>
+      <div class="chart-wrap" style="height:340px">
+        <canvas id="dirRevChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Revenue vs. Rating</div>
+      <div class="chart-desc">Bubble = number of films. Top-right = high revenue + high rating.</div>
+      <div class="chart-wrap" style="height:340px">
+        <canvas id="dirScatterChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Director Leaderboard</div>
+    <div class="chart-desc">Top 20 directors — all figures from Director_Analytics CSV</div>
+    <input class="search-box" type="text" placeholder="🔍  Search director..." oninput="filterDirTable(this.value)" />
+    <div class="scroll-y">
+      <table class="dir-table" id="dirTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Director</th>
+            <th>Films</th>
+            <th>Revenue ($B)</th>
+            <th>Avg Rating</th>
+            <th>Avg Profit ($M)</th>
+            <th>Signature Film</th>
+          </tr>
+        </thead>
+        <tbody id="dirTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ PAGE: HIDDEN GEMS ============ -->
+<div id="page-gems" class="page">
+
+  <div class="page-header">
+    <h2>💎 Hidden Gems</h2>
+    <p>High-rating (≥7.5), low-budget (≤$5M) films that punched above their weight. Sorted by rating.</p>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px">
+    <div class="chart-card">
+      <div class="chart-title">Rating Distribution</div>
+      <div class="chart-desc">All 114 hidden gems clustered by rating band</div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="gemRatingChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Budget vs Revenue (Hidden Gems)</div>
+      <div class="chart-desc">Dot size = rating. Most earned multiples of their budget.</div>
+      <div class="chart-wrap" style="height:240px">
+        <canvas id="gemScatterChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">Hidden Gems Catalogue</div>
+    <div class="chart-desc">114 films — budget ≤ $5M, rating ≥ 7.5, vote count ≥ 500</div>
+    <input class="search-box" type="text" placeholder="🔍  Search title, director, genre..." oninput="filterGems(this.value)" />
+    <div class="scroll-y">
+      <table class="gems-table" id="gemsTable">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Year</th>
+            <th>Director</th>
+            <th>Genres</th>
+            <th>Rating</th>
+            <th>Budget ($M)</th>
+            <th>Revenue ($M)</th>
+            <th>Votes</th>
+          </tr>
+        </thead>
+        <tbody id="gemsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== DATA =====
+const DATA = {"kpi": {"total_movies": 9770}, "yearly_trend": [{"year": 1990, "count": 69}, {"year": 1991, "count": 67}, {"year": 1992, "count": 100}, {"year": 1993, "count": 94}, {"year": 1994, "count": 106}, {"year": 1995, "count": 93}, {"year": 1996, "count": 112}, {"year": 1997, "count": 114}, {"year": 1998, "count": 112}, {"year": 1999, "count": 120}, {"year": 2000, "count": 127}, {"year": 2001, "count": 127}, {"year": 2002, "count": 158}, {"year": 2003, "count": 144}, {"year": 2004, "count": 169}, {"year": 2005, "count": 160}, {"year": 2006, "count": 158}, {"year": 2007, "count": 206}, {"year": 2008, "count": 190}, {"year": 2009, "count": 207}, {"year": 2010, "count": 235}, {"year": 2011, "count": 272}, {"year": 2012, "count": 231}, {"year": 2013, "count": 253}, {"year": 2014, "count": 276}, {"year": 2015, "count": 287}, {"year": 2016, "count": 302}, {"year": 2017, "count": 297}, {"year": 2018, "count": 342}, {"year": 2019, "count": 328}, {"year": 2020, "count": 235}, {"year": 2021, "count": 282}, {"year": 2022, "count": 305}, {"year": 2023, "count": 328}, {"year": 2024, "count": 480}, {"year": 2025, "count": 599}], "lang_data": [{"lang": "English", "count": 6667}, {"lang": "Other", "count": 1144}, {"lang": "French", "count": 433}, {"lang": "Japanese", "count": 393}, {"lang": "Spanish", "count": 315}, {"lang": "German", "count": 239}, {"lang": "Italian", "count": 201}, {"lang": "Hindi", "count": 157}, {"lang": "Tagalog", "count": 123}, {"lang": "Korean", "count": 98}], "lang_trend": [{"year": 1990, "English": 50, "NonEnglish": 19}, {"year": 1991, "English": 46, "NonEnglish": 21}, {"year": 1992, "English": 77, "NonEnglish": 23}, {"year": 1993, "English": 76, "NonEnglish": 18}, {"year": 1994, "English": 80, "NonEnglish": 26}, {"year": 1995, "English": 72, "NonEnglish": 21}, {"year": 1996, "English": 79, "NonEnglish": 33}, {"year": 1997, "English": 84, "NonEnglish": 30}, {"year": 1998, "English": 89, "NonEnglish": 23}, {"year": 1999, "English": 99, "NonEnglish": 21}, {"year": 2000, "English": 85, "NonEnglish": 42}, {"year": 2001, "English": 95, "NonEnglish": 32}, {"year": 2002, "English": 117, "NonEnglish": 41}, {"year": 2003, "English": 106, "NonEnglish": 38}, {"year": 2004, "English": 120, "NonEnglish": 49}, {"year": 2005, "English": 126, "NonEnglish": 34}, {"year": 2006, "English": 115, "NonEnglish": 43}, {"year": 2007, "English": 147, "NonEnglish": 59}, {"year": 2008, "English": 132, "NonEnglish": 58}, {"year": 2009, "English": 149, "NonEnglish": 58}, {"year": 2010, "English": 165, "NonEnglish": 70}, {"year": 2011, "English": 190, "NonEnglish": 82}, {"year": 2012, "English": 164, "NonEnglish": 67}, {"year": 2013, "English": 184, "NonEnglish": 69}, {"year": 2014, "English": 197, "NonEnglish": 79}, {"year": 2015, "English": 208, "NonEnglish": 79}, {"year": 2016, "English": 207, "NonEnglish": 95}, {"year": 2017, "English": 218, "NonEnglish": 79}, {"year": 2018, "English": 251, "NonEnglish": 91}, {"year": 2019, "English": 232, "NonEnglish": 96}, {"year": 2020, "English": 157, "NonEnglish": 78}, {"year": 2021, "English": 180, "NonEnglish": 102}, {"year": 2022, "English": 202, "NonEnglish": 103}, {"year": 2023, "English": 221, "NonEnglish": 107}, {"year": 2024, "English": 276, "NonEnglish": 204}, {"year": 2025, "English": 347, "NonEnglish": 252}], "genre_data": [{"genre": "Drama", "count": 4331}, {"genre": "Comedy", "count": 2776}, {"genre": "Thriller", "count": 2172}, {"genre": "Action", "count": 1967}, {"genre": "Romance", "count": 1384}, {"genre": "Horror", "count": 1342}, {"genre": "Adventure", "count": 1268}, {"genre": "Crime", "count": 1170}, {"genre": "Science Fiction", "count": 1010}, {"genre": "Fantasy", "count": 867}, {"genre": "Family", "count": 779}, {"genre": "Animation", "count": 680}, {"genre": "Mystery", "count": 650}, {"genre": "Music", "count": 354}, {"genre": "History", "count": 353}], "dir_data": [{"name": "James Cameron", "revenue": 10.23, "rating": 7.62, "movies": 9, "top_movie": "Terminator 2: Judgment Day", "avg_profit": 978.5}, {"name": "Steven Spielberg", "revenue": 9.76, "rating": 7.06, "movies": 30, "top_movie": "Schindler's List", "avg_profit": 262.2}, {"name": "Joe Russo", "revenue": 6.72, "rating": 5.8, "movies": 9, "top_movie": "Avengers: Infinity War", "avg_profit": 565.1}, {"name": "Anthony Russo", "revenue": 6.72, "rating": 5.8, "movies": 9, "top_movie": "Avengers: Endgame", "avg_profit": 565.1}, {"name": "Peter Jackson", "revenue": 6.51, "rating": 7.66, "movies": 9, "top_movie": "The Lord of the Rings: The Return of the King", "avg_profit": 579.7}, {"name": "Christopher Nolan", "revenue": 6.15, "rating": 7.23, "movies": 13, "top_movie": "The Dark Knight", "avg_profit": 341.8}, {"name": "David Yates", "revenue": 5.74, "rating": 7.29, "movies": 7, "top_movie": "Harry Potter and the Deathly Hallows: Part 2", "avg_profit": 629.5}, {"name": "Tim Burton", "revenue": 4.88, "rating": 6.96, "movies": 18, "top_movie": "Big Fish", "avg_profit": 187.6}, {"name": "J.J. Abrams", "revenue": 4.66, "rating": 6.97, "movies": 6, "top_movie": "Star Trek", "avg_profit": 563.4}, {"name": "Jon Favreau", "revenue": 4.36, "rating": 6.03, "movies": 9, "top_movie": "Iron Man", "avg_profit": 349.3}, {"name": "Ridley Scott", "revenue": 4.34, "rating": 6.94, "movies": 20, "top_movie": "Gladiator", "avg_profit": 119.6}, {"name": "Sam Raimi", "revenue": 4.21, "rating": 6.94, "movies": 11, "top_movie": "Evil Dead II", "avg_profit": 272.8}, {"name": "James Wan", "revenue": 4.18, "rating": 6.97, "movies": 10, "top_movie": "The Conjuring", "avg_profit": 349.9}, {"name": "Roland Emmerich", "revenue": 4.13, "rating": 6.35, "movies": 12, "top_movie": "The Patriot", "avg_profit": 228.9}, {"name": "Byron Howard", "revenue": 3.99, "rating": 6.18, "movies": 6, "top_movie": "Zootopia", "avg_profit": 522.0}, {"name": "Jon Watts", "revenue": 3.94, "rating": 6.99, "movies": 5, "top_movie": "Spider-Man: No Way Home", "avg_profit": 665.0}, {"name": "Michael Bay", "revenue": 3.83, "rating": 6.63, "movies": 12, "top_movie": "13 Hours", "avg_profit": 209.4}, {"name": "Shawn Levy", "revenue": 3.82, "rating": 6.63, "movies": 10, "top_movie": "Deadpool & Wolverine", "avg_profit": 273.8}, {"name": "Robert Zemeckis", "revenue": 3.74, "rating": 7.14, "movies": 16, "top_movie": "Forrest Gump", "avg_profit": 176.6}, {"name": "Pierre Coffin", "revenue": 3.71, "rating": 5.42, "movies": 5, "top_movie": "Despicable Me", "avg_profit": 681.9}], "gem_data": [{"title": "12 Angry Men", "year": "1957", "director": "Sidney Lumet", "genres": "Drama", "rating": 8.555, "budget_m": 0.4, "revenue_m": 4.4, "votes": 9735}, {"title": "The Good, the Bad and the Ugly", "year": "1966", "director": "Sergio Leone", "genres": "Western", "rating": 8.468, "budget_m": 1.2, "revenue_m": 38.9, "votes": 9408}, {"title": "Seven Samurai", "year": "1954", "director": "Akira Kurosawa", "genres": "Drama,Action", "rating": 8.45, "budget_m": 2.0, "revenue_m": 105.0, "votes": 4106}, {"title": "City of God", "year": "2002", "director": "Fernando Meirelles", "genres": "Drama,Crime", "rating": 8.427, "budget_m": 3.3, "revenue_m": 30.6, "votes": 7995}, {"title": "Cinema Paradiso", "year": "1988", "director": "Giuseppe Tornatore", "genres": "Drama,Romance", "rating": 8.424, "budget_m": 5.0, "revenue_m": 12.5, "votes": 4726}, {"title": "Psycho", "year": "1960", "director": "Alfred Hitchcock", "genres": "Horror,Thriller,Mystery", "rating": 8.418, "budget_m": 0.81, "revenue_m": 50.0, "votes": 10788}, {"title": "One Flew Over the Cuckoo's Nest", "year": "1975", "director": "Miloš Forman", "genres": "Drama", "rating": 8.4, "budget_m": 3.0, "revenue_m": 109.0, "votes": 11200}, {"title": "Whiplash", "year": "2014", "director": "Damien Chazelle", "genres": "Drama,Music", "rating": 8.374, "budget_m": 3.3, "revenue_m": 50.3, "votes": 16291}, {"title": "Rear Window", "year": "1954", "director": "Alfred Hitchcock", "genres": "Thriller,Mystery", "rating": 8.344, "budget_m": 1.0, "revenue_m": 37.0, "votes": 7004}, {"title": "Perfect Blue", "year": "1998", "director": "Satoshi Kon", "genres": "Animation,Thriller", "rating": 8.3, "budget_m": 3.0, "revenue_m": 0.7, "votes": 3055}, {"title": "Once Upon a Time in the West", "year": "1968", "director": "Sergio Leone", "genres": "Drama,Western", "rating": 8.3, "budget_m": 5.0, "revenue_m": 5.4, "votes": 4771}, {"title": "The Great Dictator", "year": "1940", "director": "Charlie Chaplin", "genres": "Comedy,War", "rating": 8.286, "budget_m": 2.0, "revenue_m": 11.0, "votes": 3618}, {"title": "Sunset Boulevard", "year": "1950", "director": "Billy Wilder", "genres": "Drama", "rating": 8.283, "budget_m": 1.75, "revenue_m": 5.0, "votes": 2858}, {"title": "Modern Times", "year": "1936", "director": "Charlie Chaplin", "genres": "Drama,Comedy,Romance", "rating": 8.281, "budget_m": 1.5, "revenue_m": 1.8, "votes": 3993}, {"title": "It's a Wonderful Life", "year": "1946", "director": "Frank Capra", "genres": "Fantasy,Drama,Family", "rating": 8.276, "budget_m": 3.18, "revenue_m": 9.6, "votes": 4778}, {"title": "Oldboy", "year": "2003", "director": "Park Chan-wook", "genres": "Drama,Action,Thriller,Mystery", "rating": 8.24, "budget_m": 3.0, "revenue_m": 17.5, "votes": 9559}, {"title": "A Clockwork Orange", "year": "1971", "director": "Stanley Kubrick", "genres": "Crime,Science Fiction", "rating": 8.2, "budget_m": 2.2, "revenue_m": 27.0, "votes": 13598}, {"title": "The Seventh Seal", "year": "1957", "director": "Ingmar Bergman", "genres": "Fantasy,Drama", "rating": 8.164, "budget_m": 0.15, "revenue_m": 0.3, "votes": 3265}, {"title": "Vertigo", "year": "1958", "director": "Alfred Hitchcock", "genres": "Thriller,Mystery,Romance", "rating": 8.149, "budget_m": 2.48, "revenue_m": 7.8, "votes": 6209}, {"title": "Casablanca", "year": "1943", "director": "Michael Curtiz", "genres": "Drama,Romance", "rating": 8.144, "budget_m": 0.88, "revenue_m": 10.5, "votes": 5908}, {"title": "Whiplash", "year": "2014", "director": "Damien Chazelle", "genres": "Drama,Music", "rating": 8.374, "budget_m": 3.3, "revenue_m": 50.3, "votes": 16291}, {"title": "Taxi Driver", "year": "1976", "director": "Martin Scorsese", "genres": "Drama,Crime", "rating": 8.129, "budget_m": 1.9, "revenue_m": 28.6, "votes": 13168}, {"title": "Get Out", "year": "2017", "director": "Jordan Peele", "genres": "Horror,Thriller,Mystery", "rating": 7.623, "budget_m": 4.5, "revenue_m": 255.4, "votes": 18535}, {"title": "Reservoir Dogs", "year": "1992", "director": "Quentin Tarantino", "genres": "Thriller,Crime", "rating": 8.1, "budget_m": 1.2, "revenue_m": 2.9, "votes": 15142}, {"title": "My Neighbor Totoro", "year": "1988", "director": "Hayao Miyazaki", "genres": "Fantasy,Animation,Family", "rating": 8.064, "budget_m": 3.7, "revenue_m": 41.0, "votes": 8609}, {"title": "Gone with the Wind", "year": "1939", "director": "Victor Fleming", "genres": "Drama,Romance,War", "rating": 7.92, "budget_m": 4.0, "revenue_m": 402.4, "votes": 4300}, {"title": "Halloween", "year": "1978", "director": "John Carpenter", "genres": "Horror,Thriller", "rating": 7.554, "budget_m": 0.33, "revenue_m": 70.3, "votes": 6050}, {"title": "The Breakfast Club", "year": "1985", "director": "John Hughes", "genres": "Drama,Comedy", "rating": 7.724, "budget_m": 1.0, "revenue_m": 51.5, "votes": 8401}, {"title": "Rocky", "year": "1976", "director": "John G. Avildsen", "genres": "Drama", "rating": 7.794, "budget_m": 1.0, "revenue_m": 117.3, "votes": 8418}, {"title": "Trainspotting", "year": "1996", "director": "Danny Boyle", "genres": "Drama,Crime", "rating": 7.96, "budget_m": 4.0, "revenue_m": 72.0, "votes": 10210}], "bt_data": [{"tier": "1. Micro (<$1M)", "count": 6093}, {"tier": "2. Low ($1-15M)", "count": 1247}, {"tier": "3. Mid ($15-75M)", "count": 1660}, {"tier": "4. High ($75-150M)", "count": 482}, {"tier": "5. Blockbuster ($150M+)", "count": 288}]};
+
+// ===== CHART DEFAULTS =====
+Chart.defaults.color = '#8b949e';
+Chart.defaults.borderColor = '#30363d';
+Chart.defaults.font.family = 'DM Sans';
+Chart.defaults.font.size = 11;
+
+const COLORS = ['#e67e22','#3498db','#2ecc71','#9b59b6','#e74c3c','#f1c40f','#1abc9c','#e91e63','#00bcd4','#ff9800'];
+
+function chartOpts(extra = {}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#8b949e', font: { size: 11 }, boxWidth: 10 } },
+      tooltip: {
+        backgroundColor: '#1c2330',
+        borderColor: '#30363d',
+        borderWidth: 1,
+        titleColor: '#e6edf3',
+        bodyColor: '#8b949e',
+      }
+    },
+    ...extra
+  };
+}
+
+// ===== INDUSTRY CHARTS =====
+
+// Yearly trend - area chart
+new Chart(document.getElementById('yearlyTrendChart'), {
+  type: 'line',
+  data: {
+    labels: DATA.yearly_trend.map(d => d.year),
+    datasets: [{
+      label: 'Movies Released',
+      data: DATA.yearly_trend.map(d => d.count),
+      borderColor: '#e67e22',
+      backgroundColor: 'rgba(230,126,34,0.15)',
+      fill: true,
+      tension: 0.3,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      borderWidth: 2
+    }]
+  },
+  options: chartOpts({
+    plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1c2330', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' } },
+    scales: {
+      x: { ticks: { maxTicksLimit: 8, color: '#8b949e' }, grid: { color: '#1e2530' } },
+      y: { ticks: { color: '#8b949e' }, grid: { color: '#1e2530' } }
+    }
+  })
+});
+
+// Language horizontal bar
+new Chart(document.getElementById('langChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.lang_data.map(d => d.lang),
+    datasets: [{
+      data: DATA.lang_data.map(d => d.count),
+      backgroundColor: COLORS,
+      borderRadius: 3,
+      borderWidth: 0
+    }]
+  },
+  options: chartOpts({
+    indexAxis: 'y',
+    plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1c2330', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' } },
+    scales: {
+      x: { ticks: { color: '#8b949e' }, grid: { color: '#1e2530' } },
+      y: { ticks: { color: '#e6edf3' }, grid: { display: false } }
+    }
+  })
+});
+
+// Genre bar
+new Chart(document.getElementById('genreChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.genre_data.map(d => d.genre),
+    datasets: [{
+      data: DATA.genre_data.map(d => d.count),
+      backgroundColor: DATA.genre_data.map((_, i) => COLORS[i % COLORS.length]),
+      borderRadius: 3,
+      borderWidth: 0
+    }]
+  },
+  options: chartOpts({
+    indexAxis: 'y',
+    plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1c2330', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' } },
+    scales: {
+      x: { ticks: { color: '#8b949e' }, grid: { color: '#1e2530' } },
+      y: { ticks: { color: '#e6edf3', font: { size: 11 } }, grid: { display: false } }
+    }
+  })
+});
+
+// Language trend stacked area
+new Chart(document.getElementById('langTrendChart'), {
+  type: 'line',
+  data: {
+    labels: DATA.lang_trend.map(d => d.year),
+    datasets: [
+      {
+        label: 'English',
+        data: DATA.lang_trend.map(d => d.English),
+        borderColor: '#3498db',
+        backgroundColor: 'rgba(52,152,219,0.3)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        borderWidth: 2
+      },
+      {
+        label: 'Non-English',
+        data: DATA.lang_trend.map(d => d.NonEnglish),
+        borderColor: '#e67e22',
+        backgroundColor: 'rgba(230,126,34,0.3)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        borderWidth: 2
+      }
+    ]
+  },
+  options: chartOpts({
+    scales: {
+      x: { ticks: { maxTicksLimit: 8, color: '#8b949e' }, grid: { color: '#1e2530' } },
+      y: { ticks: { color: '#8b949e' }, grid: { color: '#1e2530' } }
+    }
+  })
+});
+
+// Budget tier
+new Chart(document.getElementById('budgetTierChart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.bt_data.map(d => d.tier.replace(/^\d\. /, '')),
+    datasets: [{
+      data: DATA.bt_data.map(d => d.count),
+      backgroundColor: ['#8b949e','#3498db','#2ecc71','#e67e22','#e74c3c'],
+      borderRadius: 4,
+      borderWidth: 0
+    }]
+  },
+  options: chartOpts({
+    plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1c2330', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' } },
+    scales: {
+      x: { ticks: { color: '#e6edf3' }, grid: { display: false } },
+      y: { ticks: { color: '#8b949e' }, grid: { color: '#1e2530' } }
+    }
+  })
+});
+
+// ===== DIRECTOR CHARTS =====
+const top10Dir = DATA.dir_data.slice(0, 10);
+
+new Chart(document.getElementById('dirRevChart'), {
+  type: 'bar',
+  data: {
+    labels: top10Dir.map(d => d.name.split(' ').pop()),
+    datasets: [{
+      label: 'Revenue ($B)',
+      data: top10Dir.map(d => d.revenue),
+      backgroundColor: top10Dir.map((_, i) => COLORS[i % COLORS.length]),
+      borderRadius: 4,
+      borderWidth: 0
+    }]
+  },
+  options: chartOpts({
+    plugins: { legend: { display: false }, tooltip: {
+      backgroundColor: '#1c2330', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e',
+      callbacks: { label: ctx => ` $${ctx.raw}B — ${top10Dir[ctx.dataIndex].top_movie}` }
+    }},
+    scales: {
+      x: { ticks: { color: '#e6edf3' }, grid: { display: false } },
+      y: { ticks: { color: '#8b949e', callback: v => '$' + v + 'B' }, grid: { color: '#1e2530' } }
+    }
+  })
+});
+
+new Chart(document.getElementById('dirScatterChart'), {
+  type: 'bubble',
+  data: {
+    datasets: [{
+      label: 'Directors',
+      data: DATA.dir_data.map(d => ({
+        x: d.rating,
+        y: d.revenue,
+        r: Math.sqrt(d.movies) * 3,
+        name: d.name
+      })),
+      backgroundColor: DATA.dir_data.map((_, i) => COLORS[i % COLORS.length] + 'cc'),
+      borderWidth: 0
+    }]
+  },
+  options: chartOpts({
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1c2330', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e',
+        callbacks: {
+          label: ctx => {
+            const d = DATA.dir_data[ctx.dataIndex];
+            return [`${d.name}`, `Revenue: $${d.revenue}B`, `Rating: ${d.rating}`, `Films: ${d.movies}`];
+          }
+        }
+      }
+    },
+    scales: {
+      x: { title: { display: true, text: 'Avg Rating', color: '#8b949e' }, ticks: { color: '#8b949e' }, grid: { color: '#1e2530' }, min: 5, max: 8 },
+      y: { title: { display: true, text: 'Revenue ($B)', color: '#8b949e' }, ticks: { color: '#8b949e', callback: v => '$' + v + 'B' }, grid: { color: '#1e2530' } }
+    }
+  })
+});
+
+// Director table
+const dirTbody = document.getElementById('dirTableBody');
+let dirRows = [];
+DATA.dir_data.forEach((d, i) => {
+  const badge = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+  const row = `
+    <tr>
+      <td><span class="rank-badge ${badge}">${i+1}</span></td>
+      <td style="font-weight:500;color:#e6edf3">${d.name}</td>
+      <td style="color:#8b949e">${d.movies}</td>
+      <td style="color:#e67e22;font-weight:600">$${d.revenue}B</td>
+      <td>${'★'.repeat(Math.round(d.rating/2))}<span style="color:#8b949e"> ${d.rating}</span></td>
+      <td style="color:#2ecc71">$${d.avg_profit}M</td>
+      <td style="color:#8b949e;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.top_movie}</td>
+    </tr>`;
+  dirRows.push({ html: row, text: (d.name + d.top_movie).toLowerCase() });
+  dirTbody.innerHTML += row;
+});
+
+function filterDirTable(q) {
+  q = q.toLowerCase();
+  dirTbody.innerHTML = dirRows.filter(r => r.text.includes(q)).map(r => r.html).join('');
+}
+
+// ===== GEMS CHARTS =====
+// Rating distribution
+const ratingBands = {'7.5–7.7': 0, '7.7–7.9': 0, '7.9–8.1': 0, '8.1–8.3': 0, '8.3+': 0};
+DATA.gem_data.forEach(g => {
+  if (g.rating >= 8.3) ratingBands['8.3+']++;
+  else if (g.rating >= 8.1) ratingBands['8.1–8.3']++;
+  else if (g.rating >= 7.9) ratingBands['7.9–8.1']++;
+  else if (g.rating >= 7.7) ratingBands['7.7–7.9']++;
+  else ratingBands['7.5–7.7']++;
+});
+
+new Chart(document.getElementById('gemRatingChart'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(ratingBands),
+    datasets: [{
+      data: Object.values(ratingBands),
+      backgroundColor: ['#3498db','#2ecc71','#e67e22','#e74c3c','#f1c40f'],
+      borderWidth: 2,
+      borderColor: '#161b22'
+    }]
+  },
+  options: chartOpts({
+    cutout: '60%',
+    plugins: {
+      legend: { position: 'right', labels: { color: '#8b949e' } },
+      tooltip: { backgroundColor: '#1c2330', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e' }
+    }
+  })
+});
+
+new Chart(document.getElementById('gemScatterChart'), {
+  type: 'bubble',
+  data: {
+    datasets: [{
+      label: 'Hidden Gems',
+      data: DATA.gem_data.map(g => ({
+        x: g.budget_m,
+        y: g.revenue_m,
+        r: (g.rating - 7.4) * 4,
+        title: g.title
+      })),
+      backgroundColor: 'rgba(241,196,15,0.4)',
+      borderColor: 'rgba(241,196,15,0.7)',
+      borderWidth: 1
+    }]
+  },
+  options: chartOpts({
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1c2330', borderColor: '#30363d', borderWidth: 1, titleColor: '#e6edf3', bodyColor: '#8b949e',
+        callbacks: {
+          label: ctx => {
+            const g = DATA.gem_data[ctx.dataIndex];
+            return [`${g.title} (${g.year})`, `Budget: $${g.budget_m}M → Revenue: $${g.revenue_m}M`, `Rating: ${g.rating}`];
+          }
+        }
+      }
+    },
+    scales: {
+      x: { title: { display: true, text: 'Budget ($M)', color: '#8b949e' }, ticks: { color: '#8b949e' }, grid: { color: '#1e2530' } },
+      y: { title: { display: true, text: 'Revenue ($M)', color: '#8b949e' }, ticks: { color: '#8b949e' }, grid: { color: '#1e2530' } }
+    }
+  })
+});
+
+// Gems table
+const gemsTbody = document.getElementById('gemsTableBody');
+let gemRows = [];
+DATA.gem_data.forEach(g => {
+  const genreTags = g.genres.split(',').map(gen => `<span class="genre-tag">${gen.trim()}</span>`).join('');
+  const stars = '★'.repeat(Math.round((g.rating - 7) * 2));
+  const row = `
+    <tr>
+      <td><div class="gem-title">${g.title}</div></td>
+      <td style="color:#8b949e">${g.year}</td>
+      <td class="gem-dir">${g.director}</td>
+      <td>${genreTags}</td>
+      <td><span class="rating-star">${g.rating.toFixed(2)}</span></td>
+      <td style="color:#8b949e">$${g.budget_m}M</td>
+      <td style="color:#2ecc71">$${g.revenue_m}M</td>
+      <td style="color:#8b949e">${g.votes.toLocaleString()}</td>
+    </tr>`;
+  gemRows.push({ html: row, text: (g.title + g.director + g.genres).toLowerCase() });
+  gemsTbody.innerHTML += row;
+});
+
+function filterGems(q) {
+  q = q.toLowerCase();
+  gemsTbody.innerHTML = gemRows.filter(r => r.text.includes(q)).map(r => r.html).join('');
+}
+
+// ===== NAV =====
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
