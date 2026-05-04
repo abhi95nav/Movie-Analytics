@@ -1,0 +1,2536 @@
+{
+  "datasets": [
+    {
+      "name": "movies",
+      "displayName": "Movie Summary",
+      "config": {
+        "version": 1.1,
+        "source": "employeedatacatalog.gold_movie.gold_movie_summary",
+        "dimensions": [
+          {
+            "name": "title",
+            "expr": "title",
+            "comment": "Movie title"
+          },
+          {
+            "name": "original_language",
+            "expr": "original_language",
+            "comment": "Original language code (en, fr, ja, etc.)",
+            "displayName": "Language"
+          },
+          {
+            "name": "genre_list",
+            "expr": "genre_list",
+            "comment": "Comma-separated genre tags",
+            "displayName": "Genres"
+          },
+          {
+            "name": "director_name",
+            "expr": "director_name",
+            "displayName": "Director"
+          },
+          {
+            "name": "release_year",
+            "expr": "release_year",
+            "displayName": "Release Year"
+          },
+          {
+            "name": "release_date",
+            "expr": "release_date",
+            "displayName": "Release Date"
+          },
+          {
+            "name": "status",
+            "expr": "status",
+            "comment": "Release status (Released, Post Production, etc.)"
+          },
+          {
+            "name": "runtime_minutes",
+            "expr": "runtime_minutes",
+            "displayName": "Runtime (min)"
+          },
+          {
+            "name": "is_adult",
+            "expr": "is_adult"
+          },
+          {
+            "name": "budget_tier",
+            "expr": "CASE\n  WHEN budget < 1000000 THEN '1. Micro (<$1M)'\n  WHEN budget < 15000000 THEN '2. Low ($1-15M)'\n  WHEN budget < 75000000 THEN '3. Mid ($15-75M)'\n  WHEN budget < 150000000 THEN '4. High ($75-150M)'\n  ELSE '5. Blockbuster ($150M+)'\nEND",
+            "displayName": "Budget Tier",
+            "comment": "Five-tier budget segmentation for ROI analysis"
+          },
+          {
+            "name": "runtime_bucket",
+            "expr": "CASE\n  WHEN runtime_minutes < 90 THEN '1. Under 90 min'\n  WHEN runtime_minutes < 120 THEN '2. 90-120 min'\n  WHEN runtime_minutes < 150 THEN '3. 120-150 min'\n  WHEN runtime_minutes < 180 THEN '4. 150-180 min'\n  ELSE '5. 180+ min'\nEND",
+            "displayName": "Runtime Range",
+            "comment": "Runtime buckets in 30-minute ranges"
+          },
+          {
+            "name": "language_group",
+            "expr": "CASE\n  WHEN original_language = 'en' THEN 'English'\n  ELSE 'Non-English'\nEND",
+            "displayName": "Language Group",
+            "comment": "English vs Non-English classification for market analysis"
+          },
+          {
+            "name": "language_name",
+            "expr": "CASE\n  WHEN original_language = 'en' THEN 'English'\n  WHEN original_language = 'fr' THEN 'French'\n  WHEN original_language = 'ja' THEN 'Japanese'\n  WHEN original_language = 'es' THEN 'Spanish'\n  WHEN original_language = 'de' THEN 'German'\n  WHEN original_language = 'it' THEN 'Italian'\n  WHEN original_language = 'hi' THEN 'Hindi'\n  WHEN original_language = 'ko' THEN 'Korean'\n  WHEN original_language = 'tl' THEN 'Tagalog'\n  ELSE 'Other'\nEND",
+            "displayName": "Language Name",
+            "comment": "Top 9 languages by full name, rest grouped as Other"
+          }
+        ],
+        "measures": [
+          {
+            "name": "movie_count",
+            "expr": "COUNT(*)",
+            "displayName": "Movies",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 0.0
+              }
+            }
+          },
+          {
+            "name": "total_revenue",
+            "expr": "SUM(revenue)",
+            "displayName": "Total Revenue",
+            "format": {
+              "type": "currency",
+              "currencyCode": "USD",
+              "abbreviation": "compact",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "displayName": "Total Revenue ($B)",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            },
+            "name": "total_revenue_b",
+            "expr": "ROUND(SUM(revenue) / 1000000000.0, 1)",
+            "comment": "Total revenue in billions, pre-rounded for locale-independent display"
+          },
+          {
+            "displayName": "Revenue ($M)",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            },
+            "name": "revenue_m",
+            "expr": "ROUND(SUM(revenue) / 1000000.0, 1)",
+            "comment": "Total revenue in millions for locale-independent table display"
+          },
+          {
+            "displayName": "Budget ($M)",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            },
+            "name": "budget_m",
+            "expr": "ROUND(SUM(budget) / 1000000.0, 1)",
+            "comment": "Total budget in millions for locale-independent table display"
+          },
+          {
+            "displayName": "Avg Revenue ($M)",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            },
+            "name": "avg_revenue_m",
+            "expr": "ROUND(AVG(revenue) / 1000000.0, 1)",
+            "comment": "Average revenue in millions, pre-rounded for locale-independent display"
+          },
+          {
+            "name": "total_budget",
+            "expr": "SUM(budget)",
+            "displayName": "Total Budget",
+            "format": {
+              "type": "currency",
+              "currencyCode": "USD",
+              "abbreviation": "compact",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "name": "total_profit",
+            "expr": "SUM(profit)",
+            "displayName": "Total Profit",
+            "format": {
+              "type": "currency",
+              "currencyCode": "USD",
+              "abbreviation": "compact",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "name": "avg_rating",
+            "expr": "AVG(vote_average)",
+            "displayName": "Avg Rating",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            }
+          },
+          {
+            "name": "avg_roi",
+            "expr": "AVG(roi_pct)",
+            "displayName": "Avg ROI %",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "name": "avg_budget",
+            "expr": "AVG(budget)",
+            "displayName": "Avg Budget",
+            "format": {
+              "type": "currency",
+              "currencyCode": "USD",
+              "abbreviation": "compact",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "name": "avg_revenue",
+            "expr": "AVG(revenue)",
+            "displayName": "Avg Revenue",
+            "format": {
+              "type": "currency",
+              "currencyCode": "USD",
+              "abbreviation": "compact",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "name": "avg_popularity",
+            "expr": "AVG(popularity)",
+            "displayName": "Avg Popularity",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "name": "avg_runtime",
+            "expr": "AVG(runtime_minutes)",
+            "displayName": "Avg Runtime",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 0.0
+              }
+            }
+          },
+          {
+            "name": "total_votes",
+            "expr": "SUM(vote_count)",
+            "displayName": "Total Votes",
+            "format": {
+              "type": "number",
+              "abbreviation": "compact",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "name": "avg_profit",
+            "expr": "AVG(profit)",
+            "displayName": "Avg Profit",
+            "format": {
+              "type": "currency",
+              "currencyCode": "USD",
+              "abbreviation": "compact",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "displayName": "Hit Rate %",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            },
+            "name": "hit_rate",
+            "expr": "SUM(CASE WHEN profit > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*)",
+            "comment": "Percentage of movies that turned a profit"
+          }
+        ]
+      }
+    },
+    {
+      "name": "genre_movies",
+      "displayName": "Genre Breakdown",
+      "config": {
+        "version": 1.1,
+        "source": "SELECT\n  g.genre_name,\n  s.movie_id,\n  s.title,\n  s.release_year,\n  s.original_language,\n  s.budget,\n  s.revenue,\n  s.profit,\n  s.roi_pct,\n  s.vote_average,\n  s.popularity,\n  s.runtime_minutes,\n  s.director_name\nFROM employeedatacatalog.silver_movie.bridge_movie_genres g JOIN employeedatacatalog.gold_movie.gold_movie_summary s\n  ON g.movie_id = s.movie_id\n",
+        "dimensions": [
+          {
+            "name": "genre_name",
+            "expr": "genre_name",
+            "displayName": "Genre"
+          },
+          {
+            "name": "release_year",
+            "expr": "release_year",
+            "displayName": "Release Year"
+          },
+          {
+            "name": "original_language",
+            "expr": "original_language",
+            "displayName": "Language"
+          },
+          {
+            "name": "director_name",
+            "expr": "director_name",
+            "displayName": "Director"
+          },
+          {
+            "name": "budget_tier",
+            "expr": "CASE\n  WHEN budget < 1000000 THEN '1. Micro (<$1M)'\n  WHEN budget < 15000000 THEN '2. Low ($1-15M)'\n  WHEN budget < 75000000 THEN '3. Mid ($15-75M)'\n  WHEN budget < 150000000 THEN '4. High ($75-150M)'\n  ELSE '5. Blockbuster ($150M+)'\nEND",
+            "displayName": "Budget Tier",
+            "comment": "Five-tier budget segmentation for ROI analysis"
+          },
+          {
+            "name": "runtime_bucket",
+            "expr": "CASE\n  WHEN runtime_minutes < 90 THEN '1. Under 90 min'\n  WHEN runtime_minutes < 120 THEN '2. 90-120 min'\n  WHEN runtime_minutes < 150 THEN '3. 120-150 min'\n  WHEN runtime_minutes < 180 THEN '4. 150-180 min'\n  ELSE '5. 180+ min'\nEND",
+            "displayName": "Runtime Range",
+            "comment": "Runtime buckets in 30-minute ranges"
+          }
+        ],
+        "measures": [
+          {
+            "name": "movie_count",
+            "expr": "COUNT(DISTINCT movie_id)",
+            "displayName": "Movies",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 0.0
+              }
+            }
+          },
+          {
+            "name": "avg_revenue",
+            "expr": "AVG(revenue)",
+            "displayName": "Avg Revenue",
+            "format": {
+              "type": "currency",
+              "currencyCode": "USD",
+              "abbreviation": "compact",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "displayName": "Avg Revenue ($M)",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            },
+            "name": "avg_revenue_m",
+            "expr": "ROUND(AVG(revenue) / 1000000.0, 1)",
+            "comment": "Average revenue pre-divided by 1M, rounded"
+          },
+          {
+            "name": "avg_budget",
+            "expr": "AVG(budget)",
+            "displayName": "Avg Budget",
+            "format": {
+              "type": "currency",
+              "currencyCode": "USD",
+              "abbreviation": "compact",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "displayName": "Avg Budget ($M)",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            },
+            "name": "avg_budget_m",
+            "expr": "ROUND(AVG(budget) / 1000000.0, 1)",
+            "comment": "Average budget pre-divided by 1M, rounded"
+          },
+          {
+            "name": "total_revenue",
+            "expr": "SUM(revenue)",
+            "displayName": "Total Revenue",
+            "format": {
+              "type": "currency",
+              "currencyCode": "USD",
+              "abbreviation": "compact",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "displayName": "Total Revenue ($B)",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            },
+            "name": "total_revenue_b",
+            "expr": "ROUND(SUM(revenue) / 1000000000.0, 1)",
+            "comment": "Total revenue pre-divided by 1B, rounded"
+          },
+          {
+            "name": "avg_rating",
+            "expr": "AVG(vote_average)",
+            "displayName": "Avg Rating",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            }
+          },
+          {
+            "name": "avg_popularity",
+            "expr": "AVG(popularity)",
+            "displayName": "Avg Popularity",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1.0
+              }
+            }
+          },
+          {
+            "name": "revenue_multiplier",
+            "expr": "SUM(revenue) / NULLIF(SUM(budget), 0)",
+            "displayName": "Revenue Multiplier",
+            "format": {
+              "type": "number",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 2.0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "hidden_gems",
+      "displayName": "Hidden Gems",
+      "queryLines": [
+        "SELECT\n",
+        "  title,\n",
+        "  release_year,\n",
+        "  director_name,\n",
+        "  genre_list AS genres,\n",
+        "  original_language AS lang,\n",
+        "  budget,\n",
+        "  revenue,\n",
+        "  ROUND(budget / 1000000.0, 2) AS budget_m,\n",
+        "  ROUND(revenue / 1000000.0, 1) AS revenue_m,\n",
+        "  vote_average AS rating,\n",
+        "  vote_count AS votes\n",
+        "FROM\n",
+        "  employeedatacatalog.gold_movie.gold_movie_summary\n",
+        "WHERE\n",
+        "  budget BETWEEN 100000 AND 5000000\n",
+        "  AND vote_average >= 7.5\n",
+        "  AND vote_count >= 500\n",
+        "ORDER BY\n",
+        "  vote_average DESC"
+      ]
+    },
+    {
+      "name": "directors",
+      "displayName": "Director Analytics",
+      "queryLines": [
+        "SELECT\n",
+        "  director_name,\n",
+        "  movie_count,\n",
+        "  ROUND(total_revenue / 1e9, 2) AS total_revenue_b,\n",
+        "  ROUND(avg_revenue / 1e6, 1) AS avg_revenue_m,\n",
+        "  ROUND(avg_budget / 1e6, 1) AS avg_budget_m,\n",
+        "  ROUND(avg_profit / 1e6, 1) AS avg_profit_m,\n",
+        "  ROUND(avg_rating, 2) AS avg_rating,\n",
+        "  ROUND(avg_popularity, 1) AS avg_popularity,\n",
+        "  top_movie,\n",
+        "  ROW_NUMBER() OVER (ORDER BY total_revenue DESC) AS revenue_rank,\n",
+        "  ROW_NUMBER() OVER (ORDER BY avg_rating DESC) AS rating_rank\n",
+        "FROM\n",
+        "  employeedatacatalog.gold_movie.gold_director_analytics\n",
+        "WHERE\n",
+        "  movie_count >= 5"
+      ],
+      "columns": [
+        {
+          "displayName": "Revenue ($B)",
+          "description": "Career total revenue in billions (measure)",
+          "expression": "SUM(`total_revenue_b`)"
+        },
+        {
+          "displayName": "Rating",
+          "description": "Average audience rating across films (measure)",
+          "expression": "AVG(`avg_rating`)"
+        },
+        {
+          "displayName": "Films",
+          "description": "Number of films directed (measure)",
+          "expression": "SUM(`movie_count`)"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "a0c71b5b",
+      "displayName": "Industry Overview",
+      "layout": [
+        {
+          "widget": {
+            "name": "kpi_movies",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "measure(movie_count)",
+                      "expression": "MEASURE(`movie_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Total Movies"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(movie_count)",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    }
+                  },
+                  "displayName": "Total Movies"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_revenue",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "measure(total_revenue_b)",
+                      "expression": "MEASURE(`total_revenue_b`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Total Revenue"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(total_revenue_b)",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  },
+                  "formatTemplate": "${{ @formatted }}B",
+                  "displayName": "Total Revenue"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_rating",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "measure(avg_rating)",
+                      "expression": "MEASURE(`avg_rating`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Avg Rating"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(avg_rating)",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  },
+                  "formatTemplate": "{{ @formatted }} / 10",
+                  "displayName": "Avg Rating"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_roi",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "measure(avg_roi)",
+                      "expression": "MEASURE(`avg_roi`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Avg ROI"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(avg_roi)",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    }
+                  },
+                  "formatTemplate": "{{ @formatted }}%",
+                  "displayName": "Avg ROI"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 2,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "yearly_trends",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "release_year",
+                      "expression": "`release_year`"
+                    },
+                    {
+                      "name": "measure(movie_count)",
+                      "expression": "MEASURE(`movie_count`)"
+                    },
+                    {
+                      "name": "measure(total_revenue_b)",
+                      "expression": "MEASURE(`total_revenue_b`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`release_year` BETWEEN 1990 AND 2025"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Industry Trends (1990–2025)",
+                "description": "Movie output & box-office revenue grew steadily until 2020, then rebounded",
+                "showDescription": true
+              },
+              "mark": {
+                "opacity": 0.85
+              },
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "release_year",
+                  "axis": {
+                    "title": "Year"
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "primary": {
+                    "fields": [
+                      {
+                        "fieldName": "measure(movie_count)",
+                        "displayName": "Movies Released"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    }
+                  },
+                  "secondary": {
+                    "fields": [
+                      {
+                        "fieldName": "measure(total_revenue_b)",
+                        "displayName": "Revenue ($B)"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    },
+                    "formatTemplate": "${{ @formatted }}B"
+                  }
+                },
+                "label": {
+                  "show": false
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "genre_revenue",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "genre_movies",
+                  "fields": [
+                    {
+                      "name": "measure(movie_count)",
+                      "expression": "MEASURE(`movie_count`)"
+                    },
+                    {
+                      "name": "measure(avg_rating)",
+                      "expression": "MEASURE(`avg_rating`)"
+                    },
+                    {
+                      "name": "measure(total_revenue_b)",
+                      "expression": "MEASURE(`total_revenue_b`)"
+                    },
+                    {
+                      "name": "genre_name",
+                      "expression": "`genre_name`"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "direction": "DESC",
+                      "expression": "MEASURE(`total_revenue_b`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by Genre",
+                "description": "Adventure & Action lead — multi-genre films count toward each genre",
+                "showDescription": true
+              },
+              "version": 3,
+              "mark": {
+                "opacity": 0.85
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "measure(total_revenue_b)",
+                  "axis": {
+                    "title": "Total Revenue"
+                  },
+                  "formatTemplate": "${{ @formatted }}B",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "genre_name",
+                  "axis": {
+                    "title": ""
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "measure-reversed",
+                      "measure": {
+                        "fieldName": "measure(total_revenue_b)"
+                      }
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                },
+                "extra": [
+                  {
+                    "fieldName": "measure(movie_count)",
+                    "displayName": "Movies"
+                  },
+                  {
+                    "fieldName": "measure(avg_rating)",
+                    "displayName": "Avg Rating"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 5,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "language_pie",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "measure(movie_count)",
+                      "expression": "MEASURE(`movie_count`)"
+                    },
+                    {
+                      "name": "language_name",
+                      "expression": "`language_name`"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "direction": "DESC",
+                      "expression": "MEASURE(`movie_count`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Movies by Language",
+                "description": "English dominates with 68% of all films — top 9 languages shown",
+                "showDescription": true
+              },
+              "mark": {
+                "opacity": 0.85
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "measure(movie_count)",
+                  "axis": {
+                    "title": "Movies"
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "language_name",
+                  "axis": {
+                    "title": ""
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "measure-reversed",
+                      "measure": {
+                        "fieldName": "measure(movie_count)"
+                      }
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "avg_metrics_bar",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "genre_movies",
+                  "fields": [
+                    {
+                      "name": "measure(movie_count)",
+                      "expression": "MEASURE(`movie_count`)"
+                    },
+                    {
+                      "name": "measure(total_revenue_b)",
+                      "expression": "MEASURE(`total_revenue_b`)"
+                    },
+                    {
+                      "name": "measure(revenue_multiplier)",
+                      "expression": "MEASURE(`revenue_multiplier`)"
+                    },
+                    {
+                      "name": "genre_name",
+                      "expression": "`genre_name`"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "direction": "DESC",
+                      "expression": "MEASURE(`revenue_multiplier`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Genre Profitability (Revenue ×)",
+                "description": "Revenue ÷ Budget ratio — Animation & Romance yield the highest return per dollar",
+                "showDescription": true
+              },
+              "version": 3,
+              "mark": {
+                "opacity": 0.85
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "measure(revenue_multiplier)",
+                  "axis": {
+                    "title": "Revenue Multiplier"
+                  },
+                  "formatTemplate": "{{ @formatted }}×",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "genre_name",
+                  "axis": {
+                    "title": ""
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "measure-reversed",
+                      "measure": {
+                        "fieldName": "measure(revenue_multiplier)"
+                      }
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                },
+                "extra": [
+                  {
+                    "fieldName": "measure(movie_count)",
+                    "displayName": "Movies"
+                  },
+                  {
+                    "fieldName": "measure(total_revenue_b)",
+                    "displayName": "Revenue ($B)"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 11,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "io_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 🎬 Industry Overview\n",
+                "Key metrics across 9,770 movies spanning 1927–2026. Click any chart element to cross-filter the page."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "business_cases",
+      "displayName": "Business Cases",
+      "layout": [
+        {
+          "widget": {
+            "name": "header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 📊 Business Cases\n",
+                "Seven strategic questions answered from the gold datamarts — budget allocation, genre strategy, runtime impact, language trends, and pandemic recovery."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "budget_tier_roi",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "measure(avg_roi)",
+                      "expression": "MEASURE(`avg_roi`)"
+                    },
+                    {
+                      "name": "measure(movie_count)",
+                      "expression": "MEASURE(`movie_count`)"
+                    },
+                    {
+                      "name": "measure(avg_profit)",
+                      "expression": "MEASURE(`avg_profit`)"
+                    },
+                    {
+                      "name": "measure(hit_rate)",
+                      "expression": "MEASURE(`hit_rate`)"
+                    },
+                    {
+                      "name": "budget_tier",
+                      "expression": "`budget_tier`"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`budget_tier` IS NOT NULL"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Case 1: Budget Tier Performance",
+                "description": "Hit rate climbs with budget — Blockbusters & High-budget films profit 85% of the time",
+                "showDescription": true
+              },
+              "mark": {
+                "opacity": 0.85
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "measure(hit_rate)",
+                  "axis": {
+                    "title": "Hit Rate %"
+                  },
+                  "formatTemplate": "{{ @formatted }}%",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "budget_tier",
+                  "axis": {
+                    "title": ""
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "natural-order"
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                },
+                "extra": [
+                  {
+                    "fieldName": "measure(avg_roi)",
+                    "displayName": "Avg ROI %"
+                  },
+                  {
+                    "fieldName": "measure(movie_count)",
+                    "displayName": "Movies"
+                  },
+                  {
+                    "fieldName": "measure(avg_profit)",
+                    "displayName": "Avg Profit"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "runtime_sweet_spot",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "measure(avg_revenue)",
+                      "expression": "MEASURE(`avg_revenue`)"
+                    },
+                    {
+                      "name": "measure(movie_count)",
+                      "expression": "MEASURE(`movie_count`)"
+                    },
+                    {
+                      "name": "measure(avg_runtime)",
+                      "expression": "MEASURE(`avg_runtime`)"
+                    },
+                    {
+                      "name": "measure(avg_rating)",
+                      "expression": "MEASURE(`avg_rating`)"
+                    },
+                    {
+                      "name": "runtime_bucket",
+                      "expression": "`runtime_bucket`"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`runtime_bucket` IS NOT NULL"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Case 4: Runtime Sweet Spot",
+                "description": "Longer films rate higher and earn more — the 120–150 min zone maximizes both rating and box office",
+                "showDescription": true
+              },
+              "mark": {
+                "opacity": 0.85
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "measure(avg_rating)",
+                  "axis": {
+                    "title": "Avg Rating"
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "runtime_bucket",
+                  "axis": {
+                    "title": ""
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "natural-order"
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                },
+                "extra": [
+                  {
+                    "fieldName": "measure(avg_revenue)",
+                    "displayName": "Avg Revenue"
+                  },
+                  {
+                    "fieldName": "measure(movie_count)",
+                    "displayName": "Movies"
+                  },
+                  {
+                    "fieldName": "measure(avg_runtime)",
+                    "displayName": "Avg Runtime"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "genre_scatter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "genre_movies",
+                  "fields": [
+                    {
+                      "name": "genre_name",
+                      "expression": "`genre_name`"
+                    },
+                    {
+                      "name": "measure(revenue_multiplier)",
+                      "expression": "MEASURE(`revenue_multiplier`)"
+                    },
+                    {
+                      "name": "measure(movie_count)",
+                      "expression": "MEASURE(`movie_count`)"
+                    },
+                    {
+                      "name": "measure(avg_budget_m)",
+                      "expression": "MEASURE(`avg_budget_m`)"
+                    },
+                    {
+                      "name": "measure(avg_revenue_m)",
+                      "expression": "MEASURE(`avg_revenue_m`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Case 2: Genre Risk vs Return",
+                "description": "Avg budget vs avg revenue per genre — bubble size = movie count",
+                "showDescription": true
+              },
+              "version": 3,
+              "mark": {
+                "opacity": 0.85,
+                "size": 1
+              },
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "measure(avg_budget_m)",
+                  "axis": {
+                    "title": "Avg Budget"
+                  },
+                  "formatTemplate": "${{ @formatted }}M",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(avg_revenue_m)",
+                  "axis": {
+                    "title": "Avg Revenue"
+                  },
+                  "formatTemplate": "${{ @formatted }}M",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "genre_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "size": {
+                  "fieldName": "measure(movie_count)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "extra": [
+                  {
+                    "fieldName": "measure(revenue_multiplier)",
+                    "displayName": "Revenue ×"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "pandemic_impact",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "release_year",
+                      "expression": "`release_year`"
+                    },
+                    {
+                      "name": "measure(movie_count)",
+                      "expression": "MEASURE(`movie_count`)"
+                    },
+                    {
+                      "name": "measure(total_revenue_b)",
+                      "expression": "MEASURE(`total_revenue_b`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`release_year` BETWEEN 2015 AND 2025"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Case 7: Pandemic Impact & Recovery",
+                "description": "2020 revenue cratered ~85% — recovery favored fewer, bigger-budget tentpoles",
+                "showDescription": true
+              },
+              "mark": {
+                "opacity": 0.7
+              },
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "release_year",
+                  "axis": {
+                    "title": "Year"
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "primary": {
+                    "fields": [
+                      {
+                        "fieldName": "measure(movie_count)",
+                        "displayName": "Movies Released"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    }
+                  },
+                  "secondary": {
+                    "fields": [
+                      {
+                        "fieldName": "measure(total_revenue_b)",
+                        "displayName": "Revenue ($B)"
+                      }
+                    ],
+                    "scale": {
+                      "type": "quantitative"
+                    },
+                    "formatTemplate": "${{ @formatted }}B"
+                  }
+                },
+                "label": {
+                  "show": false
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 8,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "language_trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "language_group",
+                      "expression": "`language_group`"
+                    },
+                    {
+                      "name": "release_year",
+                      "expression": "`release_year`"
+                    },
+                    {
+                      "name": "measure(movie_count)",
+                      "expression": "MEASURE(`movie_count`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`release_year` BETWEEN 1990 AND 2025"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Case 5: English vs Non-English Growth",
+                "description": "Non-English cinema volume has surged since 2000 — narrowing the gap with English output",
+                "showDescription": true
+              },
+              "mark": {
+                "opacity": 0.6,
+                "layout": "stack"
+              },
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "release_year",
+                  "axis": {
+                    "title": "Year"
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(movie_count)",
+                  "axis": {
+                    "title": "Movies Released"
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "language_group",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": false
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 14,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "language_revenue",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "language_group",
+                      "expression": "`language_group`"
+                    },
+                    {
+                      "name": "release_year",
+                      "expression": "`release_year`"
+                    },
+                    {
+                      "name": "measure(avg_revenue_m)",
+                      "expression": "MEASURE(`avg_revenue_m`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`release_year` BETWEEN 2000 AND 2025"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Case 5: Revenue Gap by Language",
+                "description": "English films still earn 3× more per title — but Non-English is closing the gap since 2015",
+                "showDescription": true
+              },
+              "mark": {
+                "opacity": 0.6
+              },
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "release_year",
+                  "axis": {
+                    "title": "Year"
+                  },
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(avg_revenue_m)",
+                  "axis": {
+                    "title": "Avg Revenue per Film"
+                  },
+                  "formatTemplate": "${{ @formatted }}M",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "language_group",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": false
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 14,
+            "width": 6,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "global_filters",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "year_range",
+            "queries": [
+              {
+                "name": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788be2613d7a78cdc9530b40551_release_year",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "min(release_year)",
+                      "expression": "MIN(`release_year`)"
+                    },
+                    {
+                      "name": "max(release_year)",
+                      "expression": "MAX(`release_year`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788c1bb106e886bf214a79c964d_release_year",
+                "query": {
+                  "datasetName": "genre_movies",
+                  "fields": [
+                    {
+                      "name": "min(release_year)",
+                      "expression": "MIN(`release_year`)"
+                    },
+                    {
+                      "name": "max(release_year)",
+                      "expression": "MAX(`release_year`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Release Year",
+                "showTitle": true
+              },
+              "widgetType": "range-slider",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "release_year",
+                    "queryName": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788be2613d7a78cdc9530b40551_release_year"
+                  },
+                  {
+                    "fieldName": "release_year",
+                    "queryName": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788c1bb106e886bf214a79c964d_release_year"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "language_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788be2613d7a78cdc9530b40551_original_language",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "original_language",
+                      "expression": "`original_language`"
+                    },
+                    {
+                      "name": "original_language_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788c1bb106e886bf214a79c964d_original_language",
+                "query": {
+                  "datasetName": "genre_movies",
+                  "fields": [
+                    {
+                      "name": "original_language",
+                      "expression": "`original_language`"
+                    },
+                    {
+                      "name": "original_language_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Language",
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "original_language",
+                    "queryName": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788be2613d7a78cdc9530b40551_original_language"
+                  },
+                  {
+                    "fieldName": "original_language",
+                    "queryName": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788c1bb106e886bf214a79c964d_original_language"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "budget_tier_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788be2613d7a78cdc9530b40551_budget_tier",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "budget_tier",
+                      "expression": "`budget_tier`"
+                    },
+                    {
+                      "name": "budget_tier_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788c1bb106e886bf214a79c964d_budget_tier",
+                "query": {
+                  "datasetName": "genre_movies",
+                  "fields": [
+                    {
+                      "name": "budget_tier",
+                      "expression": "`budget_tier`"
+                    },
+                    {
+                      "name": "budget_tier_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Budget Tier",
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "budget_tier",
+                    "queryName": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788be2613d7a78cdc9530b40551_budget_tier"
+                  },
+                  {
+                    "fieldName": "budget_tier",
+                    "queryName": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788c1bb106e886bf214a79c964d_budget_tier"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "runtime_range_filter",
+            "queries": [
+              {
+                "name": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788be2613d7a78cdc9530b40551_runtime_bucket",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "runtime_bucket",
+                      "expression": "`runtime_bucket`"
+                    },
+                    {
+                      "name": "runtime_bucket_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788c1bb106e886bf214a79c964d_runtime_bucket",
+                "query": {
+                  "datasetName": "genre_movies",
+                  "fields": [
+                    {
+                      "name": "runtime_bucket",
+                      "expression": "`runtime_bucket`"
+                    },
+                    {
+                      "name": "runtime_bucket_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Runtime Range",
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "runtime_bucket",
+                    "queryName": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788be2613d7a78cdc9530b40551_runtime_bucket"
+                  },
+                  {
+                    "fieldName": "runtime_bucket",
+                    "queryName": "dashboards/01f1478789321b6789bba7b4ad436e78/datasets/01f14788c1bb106e886bf214a79c964d_runtime_bucket"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 1,
+            "width": 6,
+            "height": 1
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "talent_deep_dive",
+      "displayName": "Talent & Discovery",
+      "layout": [
+        {
+          "widget": {
+            "name": "movie_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "movies",
+                  "fields": [
+                    {
+                      "name": "title",
+                      "expression": "`title`"
+                    },
+                    {
+                      "name": "release_year",
+                      "expression": "`release_year`"
+                    },
+                    {
+                      "name": "director_name",
+                      "expression": "`director_name`"
+                    },
+                    {
+                      "name": "genre_list",
+                      "expression": "`genre_list`"
+                    },
+                    {
+                      "name": "original_language",
+                      "expression": "`original_language`"
+                    },
+                    {
+                      "name": "runtime_minutes",
+                      "expression": "`runtime_minutes`"
+                    },
+                    {
+                      "name": "measure(revenue_m)",
+                      "expression": "MEASURE(`revenue_m`)"
+                    },
+                    {
+                      "name": "measure(budget_m)",
+                      "expression": "MEASURE(`budget_m`)"
+                    },
+                    {
+                      "name": "measure(avg_rating)",
+                      "expression": "MEASURE(`avg_rating`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Movie Explorer"
+              },
+              "version": 2,
+              "rowsPerPage": 15,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "title",
+                    "useForSearch": true,
+                    "displayName": "Title"
+                  },
+                  {
+                    "fieldName": "release_year",
+                    "displayName": "Year"
+                  },
+                  {
+                    "fieldName": "director_name",
+                    "useForSearch": true,
+                    "displayName": "Director"
+                  },
+                  {
+                    "fieldName": "genre_list",
+                    "displayName": "Genres"
+                  },
+                  {
+                    "fieldName": "original_language",
+                    "displayName": "Lang"
+                  },
+                  {
+                    "fieldName": "runtime_minutes",
+                    "displayName": "Min"
+                  },
+                  {
+                    "fieldName": "measure(revenue_m)",
+                    "format": {
+                      "type": "number-plain",
+                      "abbreviation": "none",
+                      "decimalPlaces": {
+                        "type": "exact",
+                        "places": 1
+                      }
+                    },
+                    "displayName": "Revenue",
+                    "formatTemplate": "${{ @formatted }}M"
+                  },
+                  {
+                    "fieldName": "measure(budget_m)",
+                    "format": {
+                      "type": "number-plain",
+                      "abbreviation": "none",
+                      "decimalPlaces": {
+                        "type": "exact",
+                        "places": 1
+                      }
+                    },
+                    "displayName": "Budget",
+                    "formatTemplate": "${{ @formatted }}M"
+                  },
+                  {
+                    "fieldName": "measure(avg_rating)",
+                    "format": {
+                      "type": "number-plain",
+                      "abbreviation": "none",
+                      "decimalPlaces": {
+                        "type": "exact",
+                        "places": 1
+                      }
+                    },
+                    "displayName": "Rating"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 12,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "top_directors",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "directors",
+                  "fields": [
+                    {
+                      "name": "sum(movie_count)",
+                      "expression": "SUM(`movie_count`)"
+                    },
+                    {
+                      "name": "avg(avg_rating)",
+                      "expression": "AVG(`avg_rating`)"
+                    },
+                    {
+                      "name": "sum(total_revenue_b)",
+                      "expression": "SUM(`total_revenue_b`)"
+                    },
+                    {
+                      "name": "director_name",
+                      "expression": "`director_name`"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`revenue_rank` <= 15"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "direction": "DESC",
+                      "expression": "SUM(`total_revenue_b`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Top 15 Directors by Revenue",
+                "showDescription": true,
+                "description": "Career box office earnings for directors with 5+ films"
+              },
+              "mark": {
+                "opacity": 0.85
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(total_revenue_b)",
+                  "formatTemplate": "${{ @formatted }}B",
+                  "displayName": "Revenue ($B)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "director_name",
+                  "axis": {
+                    "title": "",
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "measure-reversed",
+                      "measure": {
+                        "fieldName": "sum(total_revenue_b)"
+                      }
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                },
+                "extra": [
+                  {
+                    "fieldName": "sum(movie_count)",
+                    "displayName": "Films"
+                  },
+                  {
+                    "fieldName": "avg(avg_rating)",
+                    "displayName": "Avg Rating"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "top_rated_directors",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "directors",
+                  "fields": [
+                    {
+                      "name": "sum(movie_count)",
+                      "expression": "SUM(`movie_count`)"
+                    },
+                    {
+                      "name": "sum(total_revenue_b)",
+                      "expression": "SUM(`total_revenue_b`)"
+                    },
+                    {
+                      "name": "avg(avg_rating)",
+                      "expression": "AVG(`avg_rating`)"
+                    },
+                    {
+                      "name": "director_name",
+                      "expression": "`director_name`"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`rating_rank` <= 15"
+                    }
+                  ],
+                  "disaggregated": false,
+                  "orders": [
+                    {
+                      "direction": "DESC",
+                      "expression": "AVG(`avg_rating`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Top 15 Highest Rated Directors",
+                "showDescription": true,
+                "description": "Average audience rating for directors with 5+ films — x-axis zoomed to show differences"
+              },
+              "mark": {
+                "opacity": 0.85
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "avg(avg_rating)",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    }
+                  },
+                  "displayName": "Avg Rating",
+                  "scale": {
+                    "type": "quantitative",
+                    "domain": {
+                      "min": 7
+                    }
+                  }
+                },
+                "y": {
+                  "fieldName": "director_name",
+                  "axis": {
+                    "title": "",
+                    "hideTitle": true
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "measure-reversed",
+                      "measure": {
+                        "fieldName": "avg(avg_rating)"
+                      }
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                },
+                "extra": [
+                  {
+                    "fieldName": "sum(movie_count)",
+                    "displayName": "Films"
+                  },
+                  {
+                    "fieldName": "sum(total_revenue_b)",
+                    "displayName": "Revenue ($B)"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 2,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "hidden_gems",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "hidden_gems",
+                  "fields": [
+                    {
+                      "name": "title",
+                      "expression": "`title`"
+                    },
+                    {
+                      "name": "release_year",
+                      "expression": "`release_year`"
+                    },
+                    {
+                      "name": "director_name",
+                      "expression": "`director_name`"
+                    },
+                    {
+                      "name": "genres",
+                      "expression": "`genres`"
+                    },
+                    {
+                      "name": "lang",
+                      "expression": "`lang`"
+                    },
+                    {
+                      "name": "budget_m",
+                      "expression": "`budget_m`"
+                    },
+                    {
+                      "name": "revenue_m",
+                      "expression": "`revenue_m`"
+                    },
+                    {
+                      "name": "rating",
+                      "expression": "`rating`"
+                    },
+                    {
+                      "name": "votes",
+                      "expression": "`votes`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Hidden Gems for Streaming",
+                "description": "Budget <$5M, rating ≥7.5, 500+ votes — proven crowd-pleasers for catalog acquisition",
+                "showDescription": true
+              },
+              "version": 2,
+              "rowsPerPage": 15,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "title",
+                    "useForSearch": true,
+                    "displayName": "Title"
+                  },
+                  {
+                    "fieldName": "release_year",
+                    "displayName": "Year"
+                  },
+                  {
+                    "fieldName": "director_name",
+                    "useForSearch": true,
+                    "displayName": "Director"
+                  },
+                  {
+                    "fieldName": "genres",
+                    "displayName": "Genres"
+                  },
+                  {
+                    "fieldName": "lang",
+                    "displayName": "Lang"
+                  },
+                  {
+                    "fieldName": "budget_m",
+                    "format": {
+                      "type": "number-plain",
+                      "abbreviation": "none",
+                      "decimalPlaces": {
+                        "type": "exact",
+                        "places": 2
+                      }
+                    },
+                    "displayName": "Budget",
+                    "formatTemplate": "${{ @formatted }}M"
+                  },
+                  {
+                    "fieldName": "revenue_m",
+                    "format": {
+                      "type": "number-plain",
+                      "abbreviation": "none",
+                      "decimalPlaces": {
+                        "type": "exact",
+                        "places": 1
+                      }
+                    },
+                    "displayName": "Revenue",
+                    "formatTemplate": "${{ @formatted }}M"
+                  },
+                  {
+                    "fieldName": "rating",
+                    "format": {
+                      "type": "number-plain",
+                      "abbreviation": "none",
+                      "decimalPlaces": {
+                        "type": "exact",
+                        "places": 1
+                      }
+                    },
+                    "displayName": "Rating"
+                  },
+                  {
+                    "fieldName": "votes",
+                    "format": {
+                      "type": "number-plain",
+                      "abbreviation": "none"
+                    },
+                    "displayName": "Votes"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 16,
+            "width": 12,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "td_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## 🎬 Talent & Discovery\n",
+                "Director performance rankings, searchable movie explorer, and hidden gems for streaming acquisition. Click any bar to cross-filter."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#F8FAFC",
+        "dark": "#0F172A"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#1E293B"
+      },
+      "widgetBorderColor": {
+        "light": "#E2E8F0",
+        "dark": "#334155"
+      },
+      "fontColor": {
+        "light": "#1E293B",
+        "dark": "#F1F5F9"
+      },
+      "selectionColor": {
+        "light": "#4F46E5",
+        "dark": "#818CF8"
+      },
+      "visualizationColors": [
+        "#2563EB",
+        "#DC2626",
+        "#059669",
+        "#D97706",
+        "#7C3AED",
+        "#DB2777",
+        "#0891B2",
+        "#65A30D",
+        "#EA580C",
+        "#4F46E5"
+      ],
+      "widgetHeaderAlignment": "LEFT",
+      "fontFamily": "Trebuchet MS"
+    },
+    "applyModeEnabled": false
+  }
+}
